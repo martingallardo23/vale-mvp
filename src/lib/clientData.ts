@@ -101,6 +101,7 @@ export interface Client {
   loyalty: number;      // 0–100: likelihood to stay (low = churn risk)
   satisfaction: number; // 0–100: happiness with performance
   potential: number;    // 0–100: AUM growth potential
+  aumPrevWeek: number;  // AUM 7 days ago, used to compute rank movement
 }
 
 // ─── Liquidity utilities ────────────────────────────────────────────────────
@@ -171,6 +172,7 @@ export const clients: Client[] = [
     location: "Buenos Aires, CABA",
     since: "Enero 2019",
     aum: 4100000,
+    aumPrevWeek: 3980000,
     ytdReturn: 15.6,
     benchmark: 12.1,
     risk: "Moderate",
@@ -252,6 +254,7 @@ export const clients: Client[] = [
     location: "Córdoba, Córdoba",
     since: "Marzo 2021",
     aum: 3200000,
+    aumPrevWeek: 2850000,
     ytdReturn: 22.7,
     benchmark: 18.4,
     risk: "Aggressive",
@@ -332,6 +335,7 @@ export const clients: Client[] = [
     location: "Rosario, Santa Fe",
     since: "Agosto 2020",
     aum: 2900000,
+    aumPrevWeek: 3150000,
     ytdReturn: 19.8,
     benchmark: 18.4,
     risk: "Aggressive",
@@ -411,6 +415,7 @@ export const clients: Client[] = [
     location: "Buenos Aires, CABA",
     since: "Febrero 2022",
     aum: 2400000,
+    aumPrevWeek: 2420000,
     ytdReturn: 18.3,
     benchmark: 18.4,
     risk: "Aggressive",
@@ -486,6 +491,7 @@ export const clients: Client[] = [
     location: "Mendoza, Mendoza",
     since: "Junio 2018",
     aum: 1800000,
+    aumPrevWeek: 1430000,
     ytdReturn: 12.1,
     benchmark: 12.1,
     risk: "Moderate",
@@ -561,6 +567,7 @@ export const clients: Client[] = [
     location: "Mar del Plata, Buenos Aires",
     since: "Noviembre 2017",
     aum: 1500000,
+    aumPrevWeek: 1740000,
     ytdReturn: 8.9,
     benchmark: 7.2,
     risk: "Moderate",
@@ -636,6 +643,7 @@ export const clients: Client[] = [
     location: "San Miguel de Tucumán, Tucumán",
     since: "Septiembre 2016",
     aum: 890000,
+    aumPrevWeek: 905000,
     ytdReturn: -2.4,
     benchmark: 6.1,
     risk: "Conservative",
@@ -708,6 +716,7 @@ export const clients: Client[] = [
     location: "Buenos Aires, CABA",
     since: "Abril 2023",
     aum: 720000,
+    aumPrevWeek: 695000,
     ytdReturn: 5.2,
     benchmark: 6.1,
     risk: "Conservative",

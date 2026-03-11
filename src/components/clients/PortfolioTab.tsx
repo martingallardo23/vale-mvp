@@ -6,7 +6,7 @@ import type { Client } from "@/lib/clientData";
 import { getLiquidityBreakdown } from "@/lib/clientData";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { useCurrency } from "@/lib/currencyContext";
-import { SlidersHorizontal, Check } from "lucide-react";
+import { SlidersHorizontal, Check, Sparkles, ArrowUp, ArrowDown, Minus } from "lucide-react";
 
 const TYPE_COLORS: Record<string, string> = {
   "Renta Variable": "oklch(52% 0.18 265)",
@@ -37,7 +37,7 @@ function CustomTip({ active, payload }: TipProps) {
   return (
     <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, padding: "10px 14px", fontSize: 12 }}>
       <div style={{ fontWeight: 600, color: "var(--text-primary)", marginBottom: 2 }}>{payload[0].name}</div>
-      <div style={{ color: "var(--text-muted)" }}>{payload[0].payload.weight.toFixed(1)}% del portafolio</div>
+      <div style={{ color: "var(--text-muted)" }}>{(payload[0].payload.weight ?? 0).toFixed(1)}% del portafolio</div>
     </div>
   );
 }
@@ -114,8 +114,144 @@ function NameSub({ p }: { p: Client["positions"][number] }) {
   return <div style={{ fontSize: 10.5, color: "var(--text-muted)" }}>{p.sector}</div>;
 }
 
+// ── AI suggestion ────────────────────────────────────────────────────────────
+type AiSuggestion = "Mantener" | "Aumentar" | "Reducir";
+
+const AI_SUGGESTION_STYLE: Record<AiSuggestion, { color: string; bg: string; icon: React.ReactNode }> = {
+  Mantener: { color: "var(--text-secondary)", bg: "var(--surface-raised)",           icon: <Minus size={10} /> },
+  Aumentar: { color: "oklch(42% 0.16 155)",  bg: "oklch(42% 0.16 155 / 0.10)",      icon: <ArrowUp size={10} /> },
+  Reducir:  { color: "var(--red)",            bg: "oklch(52% 0.18 25 / 0.10)",       icon: <ArrowDown size={10} /> },
+};
+
+function aiSuggestion(p: Client["positions"][number]): AiSuggestion {
+  if (isCash(p.type)) return "Mantener";
+  if (p.weight > 15 && p.gainLossPct > 12) return "Reducir";
+  if (p.gainLossPct < -12) return "Reducir";
+  if (p.weight < 5 && p.gainLossPct > 6) return "Aumentar";
+  if (p.type === "FCI" && p.fciType === "MM" && p.weight < 8) return "Aumentar";
+  return "Mantener";
+}
+
+function aiExplanation(p: Client["positions"][number], s: AiSuggestion): { title: string; bullets: string[] } {
+  if (s === "Reducir") {
+    if (p.weight > 15 && p.gainLossPct > 12) {
+      return {
+        title: `Tomar ganancias en ${p.name}`,
+        bullets: [
+          `La posición representa el ${p.weight.toFixed(1)}% del portafolio, superando el umbral de concentración recomendado del 15%.`,
+          `El activo acumula un retorno de +${p.gainLossPct.toFixed(1)}%, lo que genera una oportunidad de realización de ganancias con valuación favorable.`,
+          `Reducir entre un 30–40% permitiría rebalancear hacia activos con mayor potencial relativo sin perder exposición al sector.`,
+        ],
+      };
+    }
+    return {
+      title: `Revisar posición en ${p.name}`,
+      bullets: [
+        `El activo registra una caída de ${p.gainLossPct.toFixed(1)}%, superando el umbral de pérdida máxima tolerable.`,
+        `Mantener sin acción podría profundizar el deterioro del retorno ajustado por riesgo del portafolio.`,
+        `Se recomienda evaluar los fundamentals actuales y considerar rotar hacia alternativas con mejor perfil riesgo/retorno.`,
+      ],
+    };
+  }
+  // Aumentar
+  if (p.type === "FCI" && p.fciType === "MM") {
+    return {
+      title: `Reforzar liquidez con ${p.name}`,
+      bullets: [
+        `El fondo money market representa solo el ${p.weight.toFixed(1)}% del portafolio, por debajo del colchón de liquidez recomendado (8–10%).`,
+        `Aumentar la exposición mejora la capacidad de respuesta ante oportunidades de mercado o necesidades de rescate a corto plazo.`,
+        `Este instrumento ofrece disponibilidad inmediata (T+0) con rendimiento competitivo frente a la tasa de referencia.`,
+      ],
+    };
+  }
+  return {
+    title: `Incrementar exposición a ${p.name}`,
+    bullets: [
+      `La posición es pequeña (${p.weight.toFixed(1)}%) en relación al retorno que está generando (+${p.gainLossPct.toFixed(1)}%).`,
+      `El momentum actual sugiere que el activo está en una fase favorable dentro de su ciclo.`,
+      `Escalar gradualmente la posición —sin superar el 10–12% del portafolio— podría mejorar el retorno total sin comprometer la diversificación.`,
+    ],
+  };
+}
+
+interface ModalState { p: Client["positions"][number]; s: AiSuggestion }
+
+function SuggestionModal({ state, onClose }: { state: ModalState; onClose: () => void }) {
+  const { p, s } = state;
+  const { title, bullets } = aiExplanation(p, s);
+  const st = AI_SUGGESTION_STYLE[s];
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 200,
+        background: "oklch(0% 0 0 / 0.35)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "var(--surface)", border: "1px solid var(--border)",
+          borderRadius: 14, width: 460, boxShadow: "0 8px 32px oklch(0% 0 0 / 0.18)",
+          overflow: "hidden",
+        }}
+      >
+        {/* Header */}
+        <div style={{ padding: "18px 22px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "flex-start", gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6 }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                fontSize: 11, fontWeight: 700, letterSpacing: "0.05em",
+                color: st.color, background: st.bg,
+                padding: "2px 8px", borderRadius: 20, textTransform: "uppercase",
+              }}>
+                {st.icon} {s}
+              </span>
+              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{p.ticker}</span>
+            </div>
+            <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: 17, color: "var(--text-primary)", lineHeight: 1.3 }}>{title}</div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: 18, lineHeight: 1, padding: "0 2px", marginTop: -2 }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: "18px 22px", display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
+            <Sparkles size={12} color="var(--accent)" />
+            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.04em" }}>Análisis generado por IA</span>
+          </div>
+          {bullets.map((b, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <div style={{ width: 5, height: 5, borderRadius: "50%", background: st.color, flexShrink: 0, marginTop: 7 }} />
+              <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>{b}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "14px 22px", borderTop: "1px solid var(--border-subtle)", display: "flex", justifyContent: "flex-end" }}>
+          <button
+            onClick={onClose}
+            style={{ fontSize: 12.5, fontWeight: 600, padding: "7px 18px", borderRadius: 8, border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer" }}
+          >
+            Entendido
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Column definitions ──────────────────────────────────────────────────────
-type ColId = "ticker" | "activo" | "acciones" | "precio" | "valor" | "tasa" | "peso";
+type ColId = "ticker" | "activo" | "acciones" | "precio" | "valor" | "tasa" | "peso" | "ai";
 
 const ALL_COLS: { id: ColId; label: string }[] = [
   { id: "ticker",   label: "Ticker" },
@@ -125,9 +261,10 @@ const ALL_COLS: { id: ColId; label: string }[] = [
   { id: "valor",    label: "Valor" },
   { id: "tasa",     label: "Tasa / Retorno" },
   { id: "peso",     label: "Peso" },
+  { id: "ai",       label: "Sugerencia IA" },
 ];
 
-const DEFAULT_COLS: ColId[] = ["ticker", "activo", "acciones", "valor", "tasa"];
+const DEFAULT_COLS: ColId[] = ["ticker", "activo", "acciones", "valor", "tasa", "ai"];
 const LS_KEY = "portfolio_columns_v1";
 
 function loadCols(): ColId[] {
@@ -148,6 +285,7 @@ export function PortfolioTab({ client }: { client: Client }) {
   const [visibleCols, setVisibleCols] = useState<ColId[]>(DEFAULT_COLS);
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const [modal, setModal] = useState<ModalState | null>(null);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -187,10 +325,11 @@ export function PortfolioTab({ client }: { client: Client }) {
 
   // Ordered visible columns for rendering
   const cols = ALL_COLS.filter(c => visibleCols.includes(c.id));
-  const isRight = (id: ColId) => !["ticker", "activo"].includes(id);
+  const isRight = (id: ColId) => !["ticker", "activo", "ai"].includes(id);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {modal && <SuggestionModal state={modal} onClose={() => setModal(null)} />}
 
       {/* Summary bar + donut side by side */}
       <div
@@ -200,14 +339,10 @@ export function PortfolioTab({ client }: { client: Client }) {
         }}
       >
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", flex: 1 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", flex: 1 }}>
           <div style={{ padding: "20px 24px", borderRight: "1px solid var(--border)" }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 8 }}>Valor total</div>
             <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: 22, color: "var(--text-primary)" }}>{fmtCompact(client.aum)}</div>
-          </div>
-          <div style={{ padding: "20px 24px", borderRight: "1px solid var(--border)" }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 8 }}>Posiciones</div>
-            <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: 22, color: "var(--text-primary)" }}>{client.positions.filter(p => !isCash(p.type)).length} activos</div>
           </div>
           <div style={{ padding: "20px 24px", borderRight: "1px solid var(--border)" }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 8 }}>Liquidez disponible</div>
@@ -328,13 +463,15 @@ export function PortfolioTab({ client }: { client: Client }) {
                   style={{
                     padding: "9px 16px",
                     textAlign: isRight(col.id) ? "right" : "left",
-                    fontSize: 10.5, fontWeight: 600, color: "var(--text-muted)",
+                    fontSize: 10.5, fontWeight: 600, color: col.id === "ai" ? "var(--accent)" : "var(--text-muted)",
                     letterSpacing: "0.07em", textTransform: "uppercase",
                     borderBottom: "1px solid var(--border)",
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {col.label}
+                  {col.id === "ai"
+                    ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Sparkles size={11} /> Sugerencia IA</span>
+                    : col.label}
                 </th>
               ))}
             </tr>
@@ -400,6 +537,32 @@ export function PortfolioTab({ client }: { client: Client }) {
                     </div>
                   </td>
                 )}
+                {visibleCols.includes("ai") && (() => {
+                  const s = aiSuggestion(p);
+                  const st = AI_SUGGESTION_STYLE[s];
+                  const clickable = s !== "Mantener";
+                  return (
+                    <td style={{ padding: "12px 16px" }}>
+                      <span
+                        onClick={clickable ? () => setModal({ p, s }) : undefined}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 4,
+                          fontSize: 11.5, fontWeight: 600,
+                          color: st.color, background: st.bg,
+                          padding: "3px 9px", borderRadius: 20,
+                          cursor: clickable ? "pointer" : "default",
+                          border: clickable ? `1px solid ${st.color}` : "1px solid transparent",
+                          transition: "opacity 0.12s",
+                        }}
+                        onMouseEnter={clickable ? (e) => ((e.currentTarget as HTMLElement).style.opacity = "0.75") : undefined}
+                        onMouseLeave={clickable ? (e) => ((e.currentTarget as HTMLElement).style.opacity = "1") : undefined}
+                      >
+                        {st.icon}
+                        {s}
+                      </span>
+                    </td>
+                  );
+                })()}
               </tr>
             ))}
           </tbody>

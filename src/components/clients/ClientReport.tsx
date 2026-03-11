@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import Link from "next/link";
 import type { Client } from "@/lib/clientData";
 import { useCurrency } from "@/lib/currencyContext";
-import { ChevronLeft, Printer, ArrowUpRight, ArrowDownLeft, ArrowDown, ArrowUp, Receipt, CalendarRange, X, Check } from "lucide-react";
+import { Printer, ArrowUpRight, ArrowDownLeft, ArrowDown, ArrowUp, Receipt, CalendarRange, X, Check } from "lucide-react";
 
 type Period = "1M" | "3M" | "YTD" | "12M";
 
@@ -406,39 +405,10 @@ export function ClientReport({ client }: { client: Client }) {
         />
       )}
 
-      {/* Back bar */}
-      <div style={{ padding: "12px 32px", borderBottom: "1px solid var(--border-subtle)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href={`/clients/${client.id}`} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, color: "var(--text-muted)", textDecoration: "none" }}>
-          <ChevronLeft size={14} /> {client.name}
-        </Link>
-        <button
-          onClick={() => window.print()}
-          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 7, border: "1px solid var(--border)", background: "transparent", color: "var(--text-secondary)", cursor: "pointer" }}
-        >
-          <Printer size={13} /> Imprimir / Exportar PDF
-        </button>
-      </div>
+      <div style={{ padding: "0 0 28px", display: "flex", flexDirection: "column", gap: 28, maxWidth: 1100, width: "100%" }}>
 
-      <div style={{ padding: "32px 40px", display: "flex", flexDirection: "column", gap: 28, maxWidth: 1100, width: "100%" }}>
-
-        {/* Report header + controls */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-              Reporte de Cartera
-            </div>
-            <h1 style={{ fontFamily: "var(--font-dm-serif)", fontSize: 28, margin: "0 0 6px", color: "var(--text-primary)", lineHeight: 1 }}>
-              {client.name}
-            </h1>
-            <div style={{ display: "flex", gap: 10, fontSize: 12.5, color: "var(--text-muted)" }}>
-              <span>{client.id}</span>
-              <span>·</span>
-              <span>{client.accountType}</span>
-              <span>·</span>
-              <span>Generado el {TODAY.toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" })}</span>
-            </div>
-          </div>
-
+        {/* Toolbar: period selector + print */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           {/* Period selector */}
           <div style={{ display: "flex", gap: 3, background: "var(--surface-raised)", border: "1px solid var(--border)", borderRadius: 9, padding: 3 }}>
             {/* Custom option */}
@@ -480,6 +450,14 @@ export function ClientReport({ client }: { client: Client }) {
               </button>
             ))}
           </div>
+
+          {/* Print button */}
+          <button
+            onClick={() => window.print()}
+            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500, padding: "7px 14px", borderRadius: 7, border: "1px solid var(--border)", background: "transparent", color: "var(--text-secondary)", cursor: "pointer", whiteSpace: "nowrap" }}
+          >
+            <Printer size={13} /> Imprimir / Exportar PDF
+          </button>
         </div>
 
         {/* Main body: breakdown table + chart */}
@@ -549,28 +527,6 @@ export function ClientReport({ client }: { client: Client }) {
               <PerformanceChart data={slice} />
             </div>
 
-            <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
-              <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--border)" }}>
-                <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: 16, color: "var(--text-primary)" }}>Composición del portafolio</div>
-              </div>
-              <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 24 }}>
-                <DonutSlices positions={client.positions} />
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-                  {typeEntries.map(([type, pct]) => (
-                    <div key={type} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: 2, background: TYPE_COLORS[type] ?? "oklch(55% 0.10 240)", flexShrink: 0 }} />
-                      <span style={{ fontSize: 12, color: "var(--text-secondary)", flex: 1 }}>{type}</span>
-                      <div style={{ width: 80, height: 4, background: "var(--border)", borderRadius: 2, overflow: "hidden" }}>
-                        <div style={{ width: `${Math.min(pct * 2, 100)}%`, height: "100%", background: TYPE_COLORS[type] ?? "oklch(55% 0.10 240)", borderRadius: 2 }} />
-                      </div>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", minWidth: 36, textAlign: "right" }}>
-                        {pct.toFixed(1)}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 

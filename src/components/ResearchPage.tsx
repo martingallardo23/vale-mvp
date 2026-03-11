@@ -9,7 +9,7 @@ import { SEARCHABLE_ASSETS, type AssetKind } from "@/lib/assetData";
 import {
   Sparkles, TrendingUp, TrendingDown, Minus,
   ChevronDown, ChevronUp, AlertCircle, Globe, Zap,
-  X, Check, Settings2, Search,
+  X, Check, Settings2, Search, ExternalLink, ArrowUpRight, ArrowDownRight, RefreshCw, ShieldAlert,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -88,17 +88,92 @@ const LS_KEY = "research_active_metrics_v1";
 // ─── AI Summary ───────────────────────────────────────────────────────────────
 
 const AI_SUMMARY = {
-  date: "Lunes 9 de marzo, 2026",
-  headline: "Jornada positiva para tech global; Argentina bajo presión por política monetaria",
-  bullets: [
-    { icon: "🤖", text: "NVIDIA lidera la jornada con resultados que superan todas las estimaciones. Valentina Rodríguez y Facundo Morales tienen exposición significativa — posible momento de revisar si corresponde capturar ganancias o rebalancear." },
-    { icon: "📈", text: "Microsoft y Amazon refuerzan apuestas en IA: contratos y alianzas fortalecen el caso fundamental. Varios clientes con posición en MSFT ven viento a favor." },
-    { icon: "🇦🇷", text: "El BCRA subió tasas 300bps a 40% TNA — los portafolios con LECAPs y cauciones se verán favorecidos en el corto plazo, pero hay que monitorear el riesgo de refinanciación. Revisar los perfiles que tienen vencimientos en abril-mayo." },
-    { icon: "💵", text: "Fed sin cambios pero señala dos recortes para H2 2026. Esto presiona a la baja el rendimiento de AGG y bonos de larga duración — clientes conservadores con high duration podrían querer revisar la exposición." },
-    { icon: "⚠️", text: "Tesla suspende producción 3 semanas: Facundo Morales tiene posición relevante. Revisar si corresponde proteger via opciones o si el perfil agresivo lo tolera sin acción." },
+  date: "Miércoles 11 de marzo, 2026",
+  headline: "Escalada geopolítica EE.UU.–Irán dispara el petróleo a $100–110 y reaviva temores inflacionarios globales",
+  intro: "La noticia financiera más importante del día para la economía global y Argentina es la escalada del conflicto geopolítico entre EE.UU., Israel e Irán, que ha impulsado los precios del petróleo por encima de los 100–110 dólares por barril (Brent y Texas), generando temores de inflación, volatilidad en mercados y presión sobre políticas monetarias.",
+  sections: [
+    {
+      title: "Impacto global",
+      bullets: [
+        "Petróleo e inflación: Cada $10 de alza en el crudo eleva la inflación en 0,2–0,4 puntos porcentuales, complicando recortes de tasas de la Fed y el BCE. Operadores descuentan solo 11% de probabilidades de subidas en marzo para el BCE y retraso de recortes Fed hasta septiembre.",
+        "Mercados: Bolsas europeas caen ~2%; asiáticas mixtas con alzas por moderación temporal del crudo. Bonos soberanos globales se desploman (rendimientos suben 20pb en Australia/Canadá); dólar se fortalece vs. euro/yen.",
+        "Resultados empresariales: Aramco y Volkswagen reportan hoy cifras 2025 afectadas por energía cara. Repsol celebra su Capital Markets Day en el contexto de precios récord.",
+        "Histórico: En choques similares de los últimos 90 años, el petróleo lidera a corto plazo y el oro a 6 meses (+19% histórico).",
+      ],
+    },
+    {
+      title: "Relevancia para inversores argentinos",
+      bullets: [
+        "Argentina, importadora neta de energía con inflación crónica y dólar blue volátil, enfrenta mayor presión inflacionaria y devaluatoria. El dólar se fortalece globalmente, lo que es negativo para el carry trade local y complica las reservas del BCRA.",
+        "Oportunidades/riesgos: Exposición a energéticas (YPF, Pampa) podría beneficiarse a corto plazo. Hedging en oro y dólar recomendado. Evitar bonos emergentes sensibles a yields globales.",
+        "Semana clave: Datos de Canadá (comercio jueves, empleo viernes), Japón (salarios/PIB) y China con lineamientos económicos del ANP.",
+        "Monitorear Aramco y evolución del crudo para posibles operaciones. Visión constructiva pero prudente por sensibilidad geopolítica.",
+      ],
+    },
   ],
-  sentiment: "mixed" as "positive" | "negative" | "mixed",
+  sentiment: "negative" as "positive" | "negative" | "mixed",
 };
+
+// ─── Sources ──────────────────────────────────────────────────────────────────
+
+const SOURCES = [
+  { title: "Las claves de la semana del 9 al 13 de marzo de 2026 para invertir en bolsa", url: "https://www.larazon.es/economia/claves-semana-9-13-marzo-2026-invertir-bolsa_2026030969ae90d0e1ff634075e137c5.html", source: "La Razón", date: "9 mar" },
+  { title: "Temas del día de EFE Economía del 10 de marzo de 2026", url: "https://es.investing.com/news/stock-market-news/temas-del-dia-de-efe-economia-del-10-de-marzo-de-2026-3553288", source: "Investing.com", date: "10 mar" },
+  { title: "Los mercados mundiales de bonos se desploman ante el temor a la guerra en Oriente Próximo", url: "https://es.marketscreener.com/noticias/los-grandes-mercados-de-bonos-golpeados-y-debilitados-mientras-la-guerra-en-oriente-pr-ximo-aviva-e-ce7e5fd8dd81f422", source: "MarketScreener", date: "6 mar" },
+  { title: "Bolsas europeas cierran con caídas cercanas al 2% presionadas por escalada EE.UU.–Irán", url: "https://www.bolsamania.com/capitalbolsa/noticias/bolsa/2026-03-11", source: "Bolsamania", date: "11 mar" },
+  { title: "El conflicto en Oriente Medio impulsa los precios de la energía, reavivando el temor inflacionario", url: "https://www.bolsamania.com/capitalbolsa/noticias/economia/2026-03-11/2", source: "Bolsamania", date: "11 mar" },
+  { title: "Actualidad Financiera marzo 2026 — comportamiento mixto en bolsa y volatilidad geopolítica", url: "https://www.youtube.com/watch?v=zIYZbP7gbz0", source: "YouTube", date: "4 mar" },
+];
+
+// ─── Suggested Actions ────────────────────────────────────────────────────────
+
+interface SuggestedAction {
+  client: string;
+  initials: string;
+  clientId: string;
+  action: "Comprar" | "Vender" | "Proteger" | "Rotar";
+  description: string;
+  rationale: string;
+}
+
+const SUGGESTED_ACTIONS: SuggestedAction[] = [
+  {
+    client: "Valentina Rodríguez", initials: "VR", clientId: "C1",
+    action: "Vender",
+    description: "Vender 200 acciones YPF",
+    rationale: "Capturar ganancias con petróleo en máximos. YPF subió 18% en 3 semanas — recorte parcial reduce riesgo geopolítico sin perder exposición energética.",
+  },
+  {
+    client: "Facundo Morales", initials: "FM", clientId: "C3",
+    action: "Comprar",
+    description: "Comprar puts TSLA vto. abril",
+    rationale: "Proteger posición de Tesla ante correlación negativa con precio del petróleo alto. El perfil agresivo tolera el costo del hedge como seguro.",
+  },
+  {
+    client: "Carlos Suárez", initials: "CS", clientId: "C2",
+    action: "Rotar",
+    description: "Rotar bonos larga duración → T-Bill 3M",
+    rationale: "Contexto de suba de yields por inflación energética. Reducir duration a < 2 años protege el capital conservador de Suárez.",
+  },
+  {
+    client: "Alejandra Vega", initials: "AV", clientId: "C4",
+    action: "Comprar",
+    description: "Aumentar posición en Pampa Energía",
+    rationale: "Perfil moderado–agresivo con baja exposición energética. Pampa se beneficia directamente del alza del crudo; entrada táctica con stop en $2,800.",
+  },
+  {
+    client: "Matías Herrera", initials: "MH", clientId: "C5",
+    action: "Proteger",
+    description: "Hedge USD/ARS — comprar dólar CCL",
+    rationale: "Fortaleza del USD global presiona al ARS. Herrera tiene 80% en pesos; diversificar 15% a CCL reduce exposición cambiaria en contexto de volatilidad.",
+  },
+  {
+    client: "Luciana Paz", initials: "LP", clientId: "C6",
+    action: "Vender",
+    description: "Vender posición en fondo EM bonds",
+    rationale: "Yields globales suben 20pb — bonos emergentes bajo presión. Perfil conservador de Paz no tolera la volatilidad actual; rotar a money market.",
+  },
+];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -798,14 +873,9 @@ export function ResearchPage() {
       {/* Market stats strip */}
       <MarketStatsStrip />
 
-      {/* Sentiment + Custom Metrics */}
-      <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-        <SentimentCard />
-        <CustomMetricsSection />
-      </div>
-
       {/* AI Summary card */}
       <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
+        {/* Header */}
         <div
           style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderBottom: summaryExpanded ? "1px solid var(--border-subtle)" : "none", cursor: "pointer" }}
           onClick={() => setSummaryExpanded(v => !v)}
@@ -823,28 +893,148 @@ export function ResearchPage() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 4 }}>
-              <Globe size={11} /> Generado con datos en tiempo real
+              <Globe size={11} /> Perplexity Sonar · Tiempo real
             </span>
             {summaryExpanded ? <ChevronUp size={15} color="var(--text-muted)" /> : <ChevronDown size={15} color="var(--text-muted)" />}
           </div>
         </div>
 
         {summaryExpanded && (
-          <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
-            {AI_SUMMARY.bullets.map((b, i) => (
-              <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>{b.icon}</span>
-                <span style={{ fontSize: 13.5, color: "var(--text-secondary)", lineHeight: 1.55 }}>{b.text}</span>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {/* Intro */}
+            <div style={{ padding: "18px 20px 0" }}>
+              <p style={{ fontSize: 13.5, color: "var(--text-secondary)", lineHeight: 1.65, margin: 0 }}>
+                {AI_SUMMARY.intro}
+              </p>
+            </div>
+
+            {/* Sections */}
+            {AI_SUMMARY.sections.map((sec, si) => (
+              <div key={si} style={{ padding: "16px 20px 0" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+                  {sec.title}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {sec.bullets.map((b, bi) => (
+                    <div key={bi} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                      <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--accent)", flexShrink: 0, marginTop: 8 }} />
+                      <span style={{ fontSize: 13.5, color: "var(--text-secondary)", lineHeight: 1.6 }}>{b}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
-            <div style={{ marginTop: 4, padding: "8px 12px", background: "var(--surface-raised)", borderRadius: 8, display: "flex", gap: 6, alignItems: "center" }}>
-              <AlertCircle size={12} color="var(--text-muted)" />
-              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                Resumen generado automáticamente a las 09:15 — verificar con fuentes primarias antes de tomar decisiones.
-              </span>
+
+            {/* Sources */}
+            <div style={{ padding: "18px 20px 0" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+                Fuentes
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {SOURCES.map((s, i) => (
+                  <a
+                    key={i}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                      fontSize: 11.5, color: "var(--text-secondary)",
+                      background: "var(--surface-raised)", border: "1px solid var(--border)",
+                      borderRadius: 7, padding: "4px 9px",
+                      textDecoration: "none", transition: "border-color 0.12s, color 0.12s",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--accent)"; (e.currentTarget as HTMLAnchorElement).style.color = "var(--accent)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-secondary)"; }}
+                  >
+                    <span style={{ fontWeight: 600 }}>{s.source}</span>
+                    <span style={{ color: "var(--text-muted)" }}>·</span>
+                    <span style={{ color: "var(--text-muted)" }}>{s.date}</span>
+                    <ExternalLink size={10} />
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Suggested Actions Carousel */}
+            <div style={{ padding: "18px 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Acciones sugeridas
+                </div>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5, color: "var(--accent)", background: "var(--accent-light)", borderRadius: 20, padding: "1px 8px", fontWeight: 600 }}>
+                  <Sparkles size={9} /> IA
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: 10, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 4 }}>
+                {SUGGESTED_ACTIONS.map((a, i) => {
+                  const actionStyle = {
+                    Comprar:  { color: "oklch(42% 0.16 155)", bg: "oklch(42% 0.16 155 / 0.08)", icon: <ArrowUpRight size={11} /> },
+                    Vender:   { color: "var(--red)",           bg: "oklch(52% 0.18 25 / 0.08)",  icon: <ArrowDownRight size={11} /> },
+                    Proteger: { color: "var(--amber)",         bg: "oklch(72% 0.17 75 / 0.10)",  icon: <ShieldAlert size={11} /> },
+                    Rotar:    { color: "var(--accent)",        bg: "var(--accent-light)",         icon: <RefreshCw size={11} /> },
+                  }[a.action];
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        flexShrink: 0, width: 260,
+                        background: "var(--surface-raised)", border: "1px solid var(--border)",
+                        borderRadius: 10, padding: "14px 15px",
+                        display: "flex", flexDirection: "column", gap: 10,
+                      }}
+                    >
+                      {/* Client + action badge */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--accent-light)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: "var(--accent)", flexShrink: 0 }}>
+                          {a.initials}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {a.client}
+                          </div>
+                        </div>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 700, color: actionStyle.color, background: actionStyle.bg, padding: "2px 7px", borderRadius: 20 }}>
+                          {actionStyle.icon} {a.action}
+                        </span>
+                      </div>
+                      {/* Action description */}
+                      <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3 }}>
+                        {a.description}
+                      </div>
+                      {/* Rationale */}
+                      <p style={{ fontSize: 11.5, color: "var(--text-muted)", lineHeight: 1.55, margin: 0 }}>
+                        {a.rationale}
+                      </p>
+                      {/* Footer */}
+                      <div style={{ display: "flex", alignItems: "center", marginTop: "auto" }}>
+                        <Link href={`/clients/${a.clientId}?tab=overview`} style={{ fontSize: 11, color: "var(--accent)", textDecoration: "none", display: "flex", alignItems: "center", gap: 3, fontWeight: 500 }}>
+                          Ver cliente <ArrowUpRight size={10} />
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Disclaimer */}
+            <div style={{ padding: "0 20px 16px" }}>
+              <div style={{ padding: "8px 12px", background: "var(--surface-raised)", borderRadius: 8, display: "flex", gap: 6, alignItems: "center" }}>
+                <AlertCircle size={12} color="var(--text-muted)" />
+                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                  Resumen generado automáticamente a las 09:15 — verificar con fuentes primarias antes de tomar decisiones.
+                </span>
+              </div>
             </div>
           </div>
         )}
+      </div>
+
+      {/* Sentiment + Custom Metrics */}
+      <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+        <SentimentCard />
+        <CustomMetricsSection />
       </div>
 
       {/* Filter bar */}

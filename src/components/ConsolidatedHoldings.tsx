@@ -152,7 +152,7 @@ export function ConsolidatedHoldings() {
   const [expanded, setExpanded]           = useState<Set<string>>(new Set());
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
   const [hoveredExpand, setHoveredExpand] = useState<string | null>(null);
-  const [chartView, setChartView]         = useState<"sector" | "asset" | "client">("sector");
+  const [chartView, setChartView]         = useState<"sector" | "client">("sector");
   const [activeSlice, setActiveSlice]     = useState<number | null>(null);
   const [cols, setCols]                   = useState<ColId[]>(loadCols);
   const [pickerOpen, setPickerOpen]       = useState(false);
@@ -201,19 +201,6 @@ export function ConsolidatedHoldings() {
           color: TYPE_COLOR[name] ?? "oklch(65% 0.05 240)",
         }))
         .sort((a, b) => b.value - a.value);
-    } else if (chartView === "asset") {
-      const sorted = allRows.slice().sort((a, b) => b.totalValue - a.totalValue);
-      const top    = sorted.slice(0, 9);
-      const rest   = sorted.slice(9);
-      const items  = top.map(r => ({
-        name:  r.ticker,
-        value: r.totalValue,
-        pct:   r.bookWeight,
-        color: TYPE_COLOR[r.type] ?? "oklch(60% 0.08 240)",
-      }));
-      const otherVal = rest.reduce((s, r) => s + r.totalValue, 0);
-      if (otherVal > 0) items.push({ name: "Other", value: otherVal, pct: (otherVal / TOTAL_AUM) * 100, color: "oklch(82% 0.005 240)" });
-      return items;
     } else {
       return clients
         .slice()
@@ -364,7 +351,7 @@ export function ConsolidatedHoldings() {
             {/* Right: chart */}
             <div style={{ width: 380, flexShrink: 0, borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "center", padding: "16px 16px", overflow: "hidden" }}>
               <div style={{ display: "flex", gap: 4, marginBottom: 8, flexShrink: 0 }}>
-                {([["sector", "Tipo"], ["asset", "Activo"], ["client", "Cliente"]] as const).map(([v, label]) => {
+                {([["sector", "Tipo"], ["client", "Cliente"]] as const).map(([v, label]) => {
                   const isAct = chartView === v;
                   const isHov = hoveredSector === ("toggle-" + v);
                   return (
@@ -425,7 +412,7 @@ export function ConsolidatedHoldings() {
                     ) : (
                       <>
                         <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: 13, color: "var(--text-muted)", lineHeight: 1 }}>{chartData.length}</div>
-                        <div style={{ fontSize: 9.5, color: "var(--text-muted)", marginTop: 2 }}>{chartView === "sector" ? "tipos" : chartView === "asset" ? "activos" : "clientes"}</div>
+                        <div style={{ fontSize: 9.5, color: "var(--text-muted)", marginTop: 2 }}>{chartView === "sector" ? "tipos" : "clientes"}</div>
                       </>
                     )}
                   </div>
@@ -568,17 +555,18 @@ export function ConsolidatedHoldings() {
                       <td key="exposure" style={{ padding: "13px 20px" }}>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
                           {(() => {
-                            const sorted  = r.clientSlices.slice().sort((a, b) => b.weight - a.weight);
+                            const sorted  = r.clientSlices.slice().sort((a, b) => b.value - a.value);
                             const visible = sorted.slice(0, 3);
                             const hidden  = sorted.length - 3;
                             return (
                               <>
                                 {visible.map((s) => {
-                                  const ps = pillStyle(s.weight);
+                                  const ownershipPct = (s.value / r.totalValue) * 100;
+                                  const ps = pillStyle(ownershipPct);
                                   return (
                                     <span
                                       key={s.id}
-                                      title={`${s.firstName}: ${fmtVal(s.value)} total`}
+                                      title={`${s.firstName}: ${fmtVal(s.value)} · ${ownershipPct.toFixed(1)}% del total consolidado`}
                                       style={{
                                         display: "inline-flex", alignItems: "center", gap: 4,
                                         fontSize: 11, padding: "3px 8px", borderRadius: 20,
@@ -590,7 +578,7 @@ export function ConsolidatedHoldings() {
                                     >
                                       {s.firstName}
                                       <span style={{ opacity: 0.75, fontWeight: 400 }}>·</span>
-                                      <span style={{ fontWeight: 700 }}>{s.weight.toFixed(1)}%</span>
+                                      <span style={{ fontWeight: 700 }}>{ownershipPct.toFixed(0)}%</span>
                                     </span>
                                   );
                                 })}
@@ -624,7 +612,7 @@ export function ConsolidatedHoldings() {
       <div style={{ padding: "10px 20px", borderTop: "1px solid var(--border)", fontSize: 11, color: "var(--text-muted)", display: "flex", gap: 20 }}>
         <span>% del libro = proporción del AUM total del asesor ({fmtVal(TOTAL_AUM)})</span>
         <span>Retorno vs costo = promedio ponderado de ganancia/pérdida no realizada</span>
-        <span>% cliente = peso de este activo en el portafolio de cada cliente · <span style={{ color: "var(--red)" }}>rojo ≥ 40%</span> · <span style={{ color: "var(--amber)" }}>naranja ≥ 20%</span> · <span style={{ color: "var(--accent)" }}>azul &lt; 20%</span></span>
+        <span>% cliente = proporción del total consolidado de ese activo en manos de cada cliente · <span style={{ color: "var(--red)" }}>rojo ≥ 40%</span> · <span style={{ color: "var(--amber)" }}>naranja ≥ 20%</span> · <span style={{ color: "var(--accent)" }}>azul &lt; 20%</span></span>
       </div>
     </div>
   );

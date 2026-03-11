@@ -4,23 +4,23 @@ import { useCallback } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import type { Client } from "@/lib/clientData";
-import { OverviewTab }     from "./OverviewTab";
-import { InvestmentsTab }  from "./InvestmentsTab";
-import { RiskTab }         from "./RiskTab";
-import { NotesTab }        from "./NotesTab";
-import { useCurrency }     from "@/lib/currencyContext";
+import { OverviewTab }  from "./OverviewTab";
+import { ProfileTab }   from "./ProfileTab";
+import { ClientReport } from "./ClientReport";
+import { NotesTab }     from "./NotesTab";
+import { useCurrency }  from "@/lib/currencyContext";
 import {
-  ChevronLeft, CalendarDays, FileText,
-  LayoutDashboard, BarChart2, ShieldCheck, MessageSquare,
+  ChevronLeft, CalendarDays,
+  LayoutDashboard, User, TrendingUp, MessageSquare,
 } from "lucide-react";
 
-type Tab = "overview" | "investments" | "risk" | "notes";
+type Tab = "overview" | "profile" | "performance" | "notes";
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: "overview",     label: "Resumen",              icon: <LayoutDashboard size={13} /> },
-  { id: "investments",  label: "Portafolio",           icon: <BarChart2 size={13} /> },
-  { id: "risk",         label: "Perfil de Riesgo",     icon: <ShieldCheck size={13} /> },
+  { id: "overview",     label: "Resumen",                icon: <LayoutDashboard size={13} /> },
+  { id: "performance",  label: "Rendimiento",            icon: <TrendingUp size={13} /> },
   { id: "notes",        label: "Notas y Conversaciones", icon: <MessageSquare size={13} /> },
+  { id: "profile",      label: "Perfil del cliente",     icon: <User size={13} /> },
 ];
 
 const riskColors: Record<string, string> = {
@@ -116,12 +116,6 @@ export function ClientDetail({ client }: { client: Client }) {
                 {adjReturn(client.ytdReturn) >= 0 ? "+" : ""}{adjReturn(client.ytdReturn).toFixed(1)}%
               </div>
             </div>
-            <div>
-              <div style={{ fontSize: 10.5, color: "var(--text-muted)", fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 4 }}>vs Referencia</div>
-              <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: 20, color: (adjReturn(client.ytdReturn) - adjReturn(client.benchmark)) >= 0 ? "var(--green)" : "var(--red)", lineHeight: 1 }}>
-                {(adjReturn(client.ytdReturn) - adjReturn(client.benchmark)) >= 0 ? "+" : ""}{(adjReturn(client.ytdReturn) - adjReturn(client.benchmark)).toFixed(1)}%
-              </div>
-            </div>
           </div>
 
           {/* Actions */}
@@ -130,13 +124,6 @@ export function ClientDetail({ client }: { client: Client }) {
               <CalendarDays size={12} />
               Agendar revisión
             </button>
-            <Link
-              href={`/clients/${client.id}/report`}
-              style={{ fontSize: 12, fontWeight: 500, padding: "7px 14px", borderRadius: 7, border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, textDecoration: "none" }}
-            >
-              <FileText size={12} />
-              Generar reporte
-            </Link>
           </div>
         </div>
 
@@ -172,10 +159,10 @@ export function ClientDetail({ client }: { client: Client }) {
 
       {/* Tab content */}
       <div style={{ padding: "28px 32px", flex: 1 }}>
-        {activeTab === "overview"    && <OverviewTab    client={client} />}
-        {activeTab === "investments" && <InvestmentsTab client={client} />}
-        {activeTab === "risk"        && <RiskTab        client={client} />}
-        {activeTab === "notes"       && <NotesTab       client={client} />}
+        {activeTab === "overview"    && <OverviewTab   client={client} />}
+        {activeTab === "profile"     && <ProfileTab    client={client} />}
+        {activeTab === "performance" && <ClientReport  client={client} />}
+        {activeTab === "notes"       && <NotesTab      client={client} />}
       </div>
     </>
   );

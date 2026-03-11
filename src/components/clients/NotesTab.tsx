@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import type { Client } from "@/lib/clientData";
-import { Send, Sparkles, X, Lock, FileText, Plus } from "lucide-react";
+import { Send, Sparkles, X, CalendarDays } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -14,13 +14,6 @@ interface ChatMessage {
   text: string;
   time: string;
   aiDraftShown?: boolean;
-}
-
-interface PrivateNote {
-  id: string;
-  text: string;
-  date: string;
-  tags: string[];
 }
 
 // ─── Mock seed data ───────────────────────────────────────────────────────────
@@ -37,27 +30,24 @@ function seedMessages(client: Client): ChatMessage[] {
   ];
 }
 
-function seedNotes(client: Client): PrivateNote[] {
-  return [
-    {
-      id: "n1",
-      date: "28 feb 2026",
-      text: `${client.name} prefiere comunicarse por WhatsApp antes que por email. Responde rápido en horario de mañana.`,
-      tags: ["preferencias", "comunicación"],
-    },
-    {
-      id: "n2",
-      date: "15 feb 2026",
-      text: `Objetivo prioritario: liquidez para compra de inmueble en los próximos 18–24 meses. Considerar esto al rebalancear.`,
-      tags: ["objetivo", "liquidez"],
-    },
-    {
-      id: "n3",
-      date: "3 ene 2026",
-      text: `Comentó preocupación por inflación en USD. No quiere exposición muy larga en renta fija. Perfil más conservador de lo que indica el cuestionario.`,
-      tags: ["riesgo", "contexto"],
-    },
-  ];
+
+function aiReviewNotes(client: Client): string[] {
+  const notes: string[] = [];
+  const topPos = client.positions.slice().sort((a, b) => b.weight - a.weight)[0];
+  if (topPos && topPos.weight > 25)
+    notes.push(`Revisar concentración en ${topPos.ticker} (${topPos.weight.toFixed(0)}% del portafolio) — evaluar si sigue alineada con el perfil ${client.risk === "Conservative" ? "conservador" : client.risk === "Moderate" ? "moderado" : "agresivo"}.`);
+  if (client.ytdReturn < 5)
+    notes.push("Rendimiento YTD por debajo de expectativas — preparar explicación del contexto de mercado y opciones de ajuste.");
+  const fixedIncome = client.positions.filter(p => p.type === "Renta Fija");
+  if (fixedIncome.length > 0)
+    notes.push(`Revisar duración de la cartera de renta fija (${fixedIncome.length} posición${fixedIncome.length > 1 ? "es" : ""}) en el contexto actual de tasas.`);
+  if (client.potential >= 70)
+    notes.push("Cliente con alto potencial de crecimiento — explorar posibilidad de aumentar AUM o incorporar nuevos productos.");
+  if (client.loyalty < 60)
+    notes.push("Señales de riesgo de retención — priorizar la escucha activa y reforzar la propuesta de valor.");
+  if (notes.length < 2)
+    notes.push(`Confirmar que los objetivos de largo plazo siguen vigentes y ajustar el plan si hubo cambios en la situación personal de ${client.name.split(" ")[0]}.`);
+  return notes.slice(0, 4);
 }
 
 // Each entry: [client message, AI draft response]
@@ -151,10 +141,6 @@ export function NotesTab({ client }: { client: Client }) {
   const [input, setInput] = useState("");
   const [draftPlaceholder, setDraftPlaceholder] = useState(DEMO_PAIRS[5][1]); // seed: last msg from client
 
-  const [notes, setNotes] = useState<PrivateNote[]>(() => seedNotes(client));
-  const [noteInput, setNoteInput] = useState("");
-  const [showNoteForm, setShowNoteForm] = useState(false);
-
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const demoMsgIdx = useRef(0);
@@ -211,20 +197,55 @@ export function NotesTab({ client }: { client: Client }) {
     setInput("");
   }
 
-  function addNote() {
-    if (!noteInput.trim()) return;
-    const now = new Date();
-    const date = now.toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" });
-    setNotes((prev) => [
-      { id: `n${Date.now()}`, text: noteInput.trim(), date, tags: ["nota"] },
-      ...prev,
-    ]);
-    setNoteInput("");
-    setShowNoteForm(false);
-  }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16, height: "calc(100vh - 260px)", minHeight: 500 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+      {/* Revisión */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        {/* Dates */}
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: 15, color: "var(--text-primary)", marginBottom: 2 }}>Revisión</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Última revisión</span>
+            <span style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>{client.lastReview}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Próxima revisión</span>
+            <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 500 }}>{client.nextReview}</span>
+          </div>
+          <button
+            style={{
+              marginTop: 4, width: "100%", padding: "8px", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              border: "1px solid var(--border)", background: "transparent",
+              fontSize: 12.5, fontWeight: 500, color: "var(--accent)", cursor: "pointer",
+            }}
+          >
+            <CalendarDays size={12} />
+            Agendar revisión
+          </button>
+        </div>
+
+        {/* AI notes */}
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+            <Sparkles size={12} color="var(--accent)" />
+            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.07em", textTransform: "uppercase" }}>
+              Notas IA para la próxima revisión
+            </span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            {aiReviewNotes(client).map((note, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--accent)", flexShrink: 0, marginTop: 6 }} />
+                <span style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.55 }}>{note}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, height: "calc(100vh - 420px)", minHeight: 500 }}>
 
       {/* ── Chat panel ─────────────────────────────────────────────────────── */}
       <div
@@ -373,161 +394,7 @@ export function NotesTab({ client }: { client: Client }) {
         </div>
       </div>
 
-      {/* ── Private notes panel ─────────────────────────────────────────────── */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: 12,
-          overflow: "hidden",
-        }}
-      >
-        {/* Panel header */}
-        <div
-          style={{
-            padding: "14px 18px",
-            borderBottom: "1px solid var(--border)",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          <Lock size={13} color="var(--text-muted)" />
-          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", flex: 1 }}>
-            Notas privadas
-          </span>
-          <button
-            onClick={() => setShowNoteForm((v) => !v)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: 11.5,
-              fontWeight: 500,
-              padding: "4px 10px",
-              borderRadius: 6,
-              border: "1px solid var(--border)",
-              background: "transparent",
-              color: "var(--text-secondary)",
-              cursor: "pointer",
-            }}
-          >
-            <Plus size={11} />
-            Nueva
-          </button>
-        </div>
-
-        {/* Context pill */}
-        <div
-          style={{
-            padding: "8px 18px",
-            borderBottom: "1px solid var(--border-subtle)",
-            background: "oklch(38% 0.12 250 / 0.04)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <Sparkles size={11} color="var(--accent)" />
-            <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 500 }}>
-              Estas notas informan el contexto de la IA
-            </span>
-          </div>
-        </div>
-
-        {/* Add note form */}
-        {showNoteForm && (
-          <div
-            style={{
-              padding: "14px 18px",
-              borderBottom: "1px solid var(--border)",
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-            }}
-          >
-            <textarea
-              value={noteInput}
-              onChange={(e) => setNoteInput(e.target.value)}
-              placeholder="Añade contexto sobre este cliente…"
-              rows={3}
-              autoFocus
-              style={{
-                width: "100%",
-                padding: "9px 11px",
-                borderRadius: 8,
-                border: "1px solid var(--border)",
-                background: "var(--surface-raised)",
-                fontSize: 12.5,
-                color: "var(--text-primary)",
-                resize: "none",
-                outline: "none",
-                fontFamily: "var(--font-dm-sans)",
-                lineHeight: 1.5,
-                boxSizing: "border-box",
-              }}
-            />
-            <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-              <button
-                onClick={() => { setShowNoteForm(false); setNoteInput(""); }}
-                style={{
-                  fontSize: 11.5, padding: "5px 11px", borderRadius: 6,
-                  border: "1px solid var(--border)", background: "transparent",
-                  color: "var(--text-secondary)", cursor: "pointer",
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={addNote}
-                style={{
-                  fontSize: 11.5, fontWeight: 600, padding: "5px 13px", borderRadius: 6,
-                  border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer",
-                }}
-              >
-                Guardar
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Notes list */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "12px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
-          {notes.map((note) => (
-            <div
-              key={note.id}
-              style={{
-                padding: "12px 14px",
-                borderRadius: 9,
-                background: "var(--surface-raised)",
-                border: "1px solid var(--border-subtle)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 7 }}>
-                <span style={{ marginTop: 1, flexShrink: 0, display: "flex" }}><FileText size={12} color="var(--text-muted)" /></span>
-                <p style={{ fontSize: 12.5, color: "var(--text-primary)", lineHeight: 1.55, margin: 0, flex: 1 }}>
-                  {note.text}
-                </p>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 10.5, color: "var(--text-muted)" }}>{note.date}</span>
-                {note.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    style={{
-                      fontSize: 10, fontWeight: 600, padding: "1px 7px", borderRadius: 20,
-                      background: "var(--accent-light)", color: "var(--accent)",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+    </div>
     </div>
   );
 }

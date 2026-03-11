@@ -4,25 +4,14 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { clients } from "@/lib/clientData";
 import type { RiskTier, Status } from "@/lib/clientData";
-import { Search, SlidersHorizontal, ChevronRight, Heart, Smile, TrendingUp } from "lucide-react";
+import { Search, SlidersHorizontal, ChevronRight } from "lucide-react";
 import { useCurrency } from "@/lib/currencyContext";
 
 const riskOrder: Record<RiskTier, number> = { Conservative: 1, Moderate: 2, Aggressive: 3 };
 
 type SortKey = "name" | "aum" | "ytdReturn" | "risk" | "status";
 
-function scoreColor(v: number) {
-  if (v >= 70) return "var(--green)";
-  if (v >= 45) return "var(--amber)";
-  return "var(--red)";
-}
 
-function reviewColor(lastReview: string): string {
-  const s = lastReview.toLowerCase();
-  if (/^\d+ days? ago/.test(s) || s === "1 week ago") return "var(--green)";
-  if (s === "2 weeks ago" || s === "1 month ago")       return "var(--amber)";
-  return "var(--red)";
-}
 
 export default function ClientsPage() {
   const [query, setQuery] = useState("");
@@ -64,6 +53,16 @@ export default function ClientsPage() {
   const totalAum = filtered.reduce((s, c) => s + c.aum, 0);
   const { fmtCompact, adjReturn } = useCurrency();
   const fmtAum = fmtCompact;
+
+  // Compute rank movement: compare current AUM rank to prev-week AUM rank (across ALL clients)
+  const prevRankMap = useMemo(() => {
+    const sorted = [...clients].sort((a, b) => b.aumPrevWeek - a.aumPrevWeek);
+    return Object.fromEntries(sorted.map((c, i) => [c.id, i + 1]));
+  }, []);
+  const currRankMap = useMemo(() => {
+    const sorted = [...clients].sort((a, b) => b.aum - a.aum);
+    return Object.fromEntries(sorted.map((c, i) => [c.id, i + 1]));
+  }, []);
 
   const SortArrow = ({ col }: { col: SortKey }) =>
     sortBy === col ? (
@@ -254,32 +253,25 @@ export default function ClientsPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
+                <th style={{ padding: "10px 12px 10px 20px", fontSize: 10.5, fontWeight: 600, color: "var(--text-muted)", letterSpacing: "0.07em", textTransform: "uppercase", borderBottom: "1px solid var(--border)", background: "var(--surface-raised)", width: 48, textAlign: "center" }}>
+                  #
+                </th>
                 {colHead("Cliente", "name", "left")}
                 {colHead("AUM", "aum", "right")}
                 {colHead("Retorno YTD", "ytdReturn", "right")}
-                <th style={{ padding: "10px 20px", fontSize: 10.5, fontWeight: 600, color: "var(--text-muted)", letterSpacing: "0.07em", textTransform: "uppercase", borderBottom: "1px solid var(--border)", background: "var(--surface-raised)", textAlign: "right" }}>
-                  vs Referencia
-                </th>
-                <th style={{ padding: "10px 20px", fontSize: 10.5, fontWeight: 600, color: "var(--text-muted)", letterSpacing: "0.07em", textTransform: "uppercase", borderBottom: "1px solid var(--border)", background: "var(--surface-raised)" }}>
-                  Última revisión
-                </th>
-                <th style={{ padding: "10px 20px", fontSize: 10.5, fontWeight: 600, color: "var(--text-muted)", letterSpacing: "0.07em", textTransform: "uppercase", borderBottom: "1px solid var(--border)", background: "var(--surface-raised)", whiteSpace: "nowrap" }}>
-                  Leal · Sat · Pot
-                </th>
                 <th style={{ background: "var(--surface-raised)", borderBottom: "1px solid var(--border)", width: 40 }} />
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ padding: "48px 24px", textAlign: "center", color: "var(--text-muted)", fontSize: 14 }}>
+                  <td colSpan={6} style={{ padding: "48px 24px", textAlign: "center", color: "var(--text-muted)", fontSize: 14 }}>
                     Ningún cliente coincide con los filtros.
                   </td>
                 </tr>
               ) : filtered.map((c, i) => {
-                const adjYtd   = adjReturn(c.ytdReturn);
-                const adjBench = adjReturn(c.benchmark);
-                const alpha    = adjYtd - adjBench;
+                const adjYtd = adjReturn(c.ytdReturn);
+                const rankChange = prevRankMap[c.id] - currRankMap[c.id];
                 return (
                   <tr
                     key={c.id}
@@ -287,6 +279,24 @@ export default function ClientsPage() {
                       borderBottom: i < filtered.length - 1 ? "1px solid var(--border-subtle)" : "none",
                     }}
                   >
+                    <td style={{ padding: "14px 12px 14px 20px", textAlign: "center", width: 48 }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", lineHeight: 1 }}>
+                          {currRankMap[c.id]}
+                        </span>
+                        {rankChange !== 0 && (
+                          <span style={{
+                            fontSize: 9.5, fontWeight: 700, lineHeight: 1,
+                            color: rankChange > 0 ? "var(--green)" : "var(--red)",
+                          }}>
+                            {rankChange > 0 ? `▲${rankChange}` : `▼${Math.abs(rankChange)}`}
+                          </span>
+                        )}
+                        {rankChange === 0 && (
+                          <span style={{ fontSize: 9.5, color: "var(--text-muted)", lineHeight: 1 }}>—</span>
+                        )}
+                      </div>
+                    </td>
                     <td style={{ padding: "14px 20px" }}>
                       <Link href={`/clients/${c.id}`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
                         <div
@@ -316,31 +326,6 @@ export default function ClientsPage() {
                       <span style={{ fontSize: 13.5, fontWeight: 500, color: adjYtd >= 0 ? "var(--green)" : "var(--red)" }}>
                         {adjYtd >= 0 ? "+" : ""}{adjYtd.toFixed(1)}%
                       </span>
-                    </td>
-
-                    <td style={{ padding: "14px 20px", textAlign: "right" }}>
-                      <span style={{ fontSize: 12.5, fontWeight: 500, color: alpha >= 0 ? "var(--green)" : "var(--red)" }}>
-                        {alpha >= 0 ? "+" : ""}{alpha.toFixed(1)}%
-                      </span>
-                    </td>
-
-                    <td style={{ padding: "14px 20px" }}>
-                      <span style={{ fontSize: 12.5, fontWeight: 500, color: reviewColor(c.lastReview) }}>{c.lastReview}</span>
-                    </td>
-
-                    <td style={{ padding: "14px 20px" }}>
-                      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                        {([
-                          { icon: Heart,      value: c.loyalty,       title: "Lealtad" },
-                          { icon: Smile,      value: c.satisfaction,  title: "Satisfacción" },
-                          { icon: TrendingUp, value: c.potential,     title: "Potencial" },
-                        ] as const).map(({ icon: Icon, value, title }) => (
-                          <div key={title} title={`${title}: ${value}%`} style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                            <Icon size={11} color={scoreColor(value)} />
-                            <span style={{ fontSize: 11.5, fontWeight: 600, color: scoreColor(value), lineHeight: 1 }}>{value}</span>
-                          </div>
-                        ))}
-                      </div>
                     </td>
 
                     <td style={{ padding: "14px 12px", textAlign: "center" }}>
