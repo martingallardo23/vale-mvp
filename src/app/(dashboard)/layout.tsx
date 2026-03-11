@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/Sidebar";
 import { CurrencyProvider } from "@/lib/currencyContext";
+import { ChatWidget } from "@/components/ChatWidget";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,6 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </div>
       </div>
+      <ChatWidget />
     </CurrencyProvider>
   );
 }
